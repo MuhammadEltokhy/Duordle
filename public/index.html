@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Main Menu</title>
+  <meta name="description" content="Online multi-wordle game. Create a lobby, invite ur homies, and compete to guess the word first."/>
+  <meta property="og:title" content="Duordle"/>
+  <meta property="og:description" content="Create or join a lobby and race your friends to guess the word."/>
+  <meta property="og:image" content="assets/social-share.png"/>
+  <meta property="og:type" content="website" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="styles/style.css"/>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Duordle",
+    "applicationCategory": "Game",
+    "operatingSystem": "Any (web browser)",
+    "description": "A free online multiplayer word-guessing game inspired by Wordle."
+  }
+  </script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-mark" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span class="filled-yellow"></span><span></span>
+      <span></span><span class="filled-green"></span><span></span>
+    </div>
+    <span class="site-title">Duordle</span>
+  </header>
+  <main>
+    <div class="page-container">
+      <h1>Hi Duordle</h1>
+      <p class="subtitle">Play online Wordle, just it!</p>
+      <div class="field">
+        <label for="username-input">Choose a username</label>
+        <input type="text" id="username-input" maxlength="16" autocomplete="off" placeholder="e.g. finger_baster" />
+        <div class="error-text" id="username-error"></div>
+      </div>
+      <button class="btn" id="create-btn" disabled>Create your own lobby</button>
+      <button class="btn btn-secondary" id="join-btn" disabled>Join a lobby</button>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Duordle</span>
+    <a href="privacy-policy.html">Privacy Policy</a>
+  </footer>
+</body>
+<script src="scripts/script.js"></script>
+</html>
