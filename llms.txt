@@ -1,0 +1,12 @@
+# Duordle
+
+> Duordle is a free, browser-based competitive multiplayer word-guessing
+> game inspired by Wordle. Players create or join online lobbies (public
+> or private) and race to guess the same word, scored on accuracy, speed,
+> and how early they solved it.
+
+- No account or login required — pick a username each visit.
+- Lobbies: 2-6 players, word length 3-10 letters, 1-7 rounds, public or
+  private (shareable 4-character ID).
+- [Homepage](/): create or join a lobby.
+- [Privacy Policy](/privacy-policy.html)

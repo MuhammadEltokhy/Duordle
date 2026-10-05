@@ -1,0 +1,5 @@
+node_modules/
+.env
+server/data/used_ids.json
+server/data/validated_words_*.json
+*.log
