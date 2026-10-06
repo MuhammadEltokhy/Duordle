@@ -1,8 +1,8 @@
 (function(){
-  const unInput=document.getElementById('username-input');
-  const unError=document.getElementById('username-error');
-  const create=document.getElementById('create-btn');
-  const join=document.getElementById('join-btn');
+  const unInput=document.getElementById('usernameInput');
+  const unError=document.getElementById('usernameError');
+  const create=document.getElementById('create');
+  const join=document.getElementById('join');
   function valid(name){
     return /^[A-Za-z0-9_\-]{2,16}$/.test(name.trim());
   }
@@ -17,10 +17,10 @@
   }
   unInput.addEventListener('input', refresh);
   refresh();
-  function save(destination) {
-    sessionStorage.setItem('duordle_username', unInput.value.trim());
-    window.location.href = destination;
+  function save(go) {
+    sessionStorage.setItem('username', unInput.value.trim());
+    window.location.href = go;
   }
-  create.addEventListener('click', () => save('create-lobby.html'));
-  join.addEventListener('click', () => save('join-lobby.html'));
+  create.addEventListener('click', () => save('create.html'));
+  join.addEventListener('click', () => save('join.html'));
 })();

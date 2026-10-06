@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joining Online Rooms</title>
+    <meta name="description" content="Browse and join online rooms to play Duordle with friends.">
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="alternate stylesheet" href="styles/join.css">
+</head>
+<body>
+    <header class="site-header">
+        <div class="logo-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span class="filled-yellow"></span><span></span>
+            <span></span><span class="filled-green"></span><span></span>
+        </div>
+        <span class="site-title">Duordle</span>
+    </header>
+    <main>
+        <nav class="breadcrumbs">
+            <a href="index.html">Home</a> &gt; <span>Join a Lobby</span>
+        </nav>
+        <div class="page-container">
+            <h1>Join a Lobby</h1>
+            <div class="filters-row">
+                <button class="btn btn-secondary" id="filters-btn" type="button">Filters</button>
+                <button class="btn btn-secondary" id="use-id-btn" type="button">ID</button>
+            </div>
+            <div class="field" id="filters-box">
+                <label for="filter-players">Max Players</label>
+                <select id="filter-players">
+                    <option value="">Any</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                </select>
+                <label for="filter-length" id="ch-label">Word Length</label>
+                <select id="filter-length">
+                    <option value="">Any</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                </select>
+                <button class="btn" id="apply-filters-btn">Apply</button>
+            </div>
+            <ul class="lobby-list" id="lobby-list"></ul>
+            <div class="empty-state" id="empty-state">There's no lobbies bruh</div>
+        </div>
+        </nav>
+    </main>
+    <div class="modal-overlay" id="use-id-modal">
+        <div class="modal-box">
+            <h2>Enter an ID</h2>
+            <div class="field">
+                <input type="text" id="lobby-id-input" maxlength="4" autocomplete="off" placeholder="e.g. O6h7" class="input" />
+            </div>
+            <button class="btn" id="submit-id-btn">Join</button>
+            <button class="btn btn-secondary" id="cancel-id-btn">Cancel</button>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+    <footer class="site-footer">
+        <span>Duordle</span>
+        <a href="policy.html">Privacy Policy</a>
+    </footer>
+</body>
+<script src="socket.io/socket.io.js"></script>
+<script src="scripts/socket-client.js"></script>
+<script src="scripts/join.js"></script>
+</html>
