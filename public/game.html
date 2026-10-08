@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Gameplay match for duordle">
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="styles/style.css">
+    <link rel="stylesheet" href="styles/game.css">
+    <title>Gameplay</title>
+</head>
+<body>
+    <header class="site-header">
+        <div class="logo-mark" aria-hidden="true">
+            <span></span><span></span><span></span>
+            <span></span><span class="filled-yellow"></span><span></span>
+            <span></span><span class="filled-green"></span><span></span>
+        </div>
+        <span class="site-title">Duordle</span>
+        <button class="btn btn-secondary opponents-toggle" id="opponents-toggle-btn" type="button">Players</button>
+    </header>
+    <main>
+        <div class="game-layout">
+            <aside class="opponents-panel" id="opponents-panel">
+                <h2>Lobby</h2>
+                <div id="opponents-container"></div>
+            </aside>
+            <section class="own-game">
+                <div class="round-info" id="round-info"></div>
+                <div class="board" id="board"></div>
+                <div class="keyboard" id="keyboard"></div>
+            </section>
+        </div>
+    </main>
+    <div class="modal-overlay" id="round-result-modal">
+        <div class="modal-box">
+            <h2 id="result-heading">Round over</h2>
+            <p class="word-reveal">The word was <strong id="result-word"></strong></p>
+            <ul class="ranking-list" id="ranking-list"></ul>
+            <button class="btn" id="next-round-btn">Next round</button>
+            <button class="btn" id="play-again-btn">Play again</button>
+            <a href="/" class="hint-text">Back to home</a>
+        </div>
+    </div>
+    <div class="toast" id="toast"></div>
+</body>
+<script src="/socket.io/socket.io.js"></script>
+<script src="scripts/socket-client.js"></script>
+<script src="scripts/game.js"></script>
+</html>
