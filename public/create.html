@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Create a Lobby</title>
+  <meta name="description" content="Set up your Duordle lobby: word length, player count, rounds, and whether it's public or private." />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="styles/style.css"/>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-mark" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span class="filled-yellow"></span><span></span>
+      <span></span><span class="filled-green"></span><span></span>
+    </div>
+    <span class="site-title">Duordle</span>
+  </header>
+  <main>
+    <nav class="breadcrumbs"><a href="/">Home</a> / Create a lobby</nav>
+    <div class="page-container">
+      <h1 style="font-size:1.8rem;">Create your lobby</h1>
+      <div class="field">
+        <label for="visibility-select">Lobby visibility</label>
+        <select id="visibility-select">
+          <option value="public">Public</option>
+          <option value="private">Private</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="length-slider">Word length: <span id="length-value">5</span></label>
+        <input type="range" id="length-slider" min="3" max="10" step="1" value="5" />
+        <div class="hint-text" id="length-joke">that's real deal homie</div>
+      </div>
+      <div class="field">
+        <label for="players-select">Maximum players</label>
+        <select id="players-select">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="rounds-select">Number of rounds</label>
+        <select id="rounds-select">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+          <option value="7">7</option>
+        </select>
+      </div>
+      <button class="btn" id="create-submit-btn">Create lobby</button>
+      <div class="error-text" id="create-error"></div>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Duordle</span>
+  </footer>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="scripts/socket-client.js"></script>
+  <script src="scripts/create.js"></script>
+</body>
+</html>

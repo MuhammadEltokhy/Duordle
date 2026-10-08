@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Lobby</title>
+  <meta name="description" content="Waiting room"/>
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"/>
+  <link rel="stylesheet" href="styles/style.css"/>
+  <link rel="stylesheet" href="styles/lobby.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo-mark" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span class="filled-yellow"></span><span></span>
+      <span></span><span class="filled-green"></span><span></span>
+    </div>
+    <span class="site-title">Duordle</span>
+  </header>
+  <main>
+    <div class="page-container">
+      <h1>Lobby <span class="id-display" id="lobby-id-display"></span></h1>
+      <p class="hint-text" id="visibility-note"></p>
+      <p class="subtitle" id="share-note"></p>
+      <p class="hint-text"><strong>Word length:</strong><span id="setting-length"></span> &middot;
+        <strong>Rounds:</strong><span id="setting-rounds"></span> &middot;
+        <strong>Max players:</strong><span id="setting-maxplayers"></span></p>
+      <ul class="lobby-list" id="player-list"></ul>
+      <button class="btn" id="start-btn">Start game</button>
+      <p class="hint-text" id="waiting-note">Waiting for the host to start...</p>
+    </div>
+  </main>
+  <footer class="site-footer">
+    <span>Duordle</span>
+  </footer>
+  <script src="socket.io/socket.io.js"></script>
+  <script src="scripts/socket-client.js"></script>
+  <script src="scripts/room.js"></script>
+</body>
+</html>

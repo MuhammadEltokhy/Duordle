@@ -1,0 +1,15 @@
+.page-container h1{
+    font-size: 1.8rem;
+}
+.page-container .id-display{
+    font-family: monospace;
+}
+.page-container .subtitle{
+    font-size: 0.95rem;
+}
+.page-container ul{
+    margin-top: 20px;
+}
+.page-container button{
+    display: none;
+}
