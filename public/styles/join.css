@@ -1,0 +1,37 @@
+@import url('style.css');
+.page-container{
+    max-width: 560px;
+}
+.page-container h1{
+    font-size: 1.8rem;
+}
+.page-container .field{
+    display: none;
+    border: 1px solid var(--color-border);
+    padding: 12px;
+    border-radius: var(--radius);
+}
+.page-container .field label:nth-child(2){
+    margin-top: 10px;
+}
+.page-container .field .btn{
+    margin-top: 12px;
+}
+.page-container .empty-state{
+    display: none;
+}
+.modal-overlay{
+    display: none;
+}
+.modal-overlay .modal-box h2{
+    margin-top: 0;
+}
+.modal-overlay .modal-box .input{
+    text-align: center;
+    font-family: monospace;
+    font-size: 1.3rem;
+    letter-spacing: 0.2em;
+}
+.toast{
+    display: none;
+}
