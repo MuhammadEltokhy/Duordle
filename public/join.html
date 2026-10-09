@@ -3,11 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Joining Online Rooms</title>
+    <title>Online Rooms</title>
     <meta name="description" content="Browse and join online rooms to play Duordle with friends.">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <link rel="stylesheet" href="styles/style.css">
-    <link rel="stylesheet" href="styles/join.css">
+    <style>
+        .page-container{
+            max-width: 560px;
+        }
+        .page-container h1{
+            font-size: 1.8rem;
+        }
+        .page-container .field{
+            display: none;
+            border: 1px solid var(--color-border);
+            padding: 12px;
+            border-radius: var(--radius);
+        }
+        .page-container .field label:nth-child(2){
+            margin-top: 10px;
+        }
+        .page-container .field .btn{
+            margin-top: 12px;
+        }
+        .modal-overlay{
+            display: none;
+        }
+        .modal-overlay .modal-box h2{
+            margin-top: 0;
+        }
+        .modal-overlay .modal-box .input{
+            text-align: center;
+            font-family: monospace;
+            font-size: 1.3rem;
+            letter-spacing: 0.2em;
+        }
+        .toast{
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <header class="site-header">
@@ -53,7 +87,7 @@
                 <button class="btn" id="apply-filters-btn">Apply</button>
             </div>
             <ul class="lobby-list" id="lobby-list"></ul>
-            <div class="empty-state" id="empty-state">There's no lobbies bruh</div>
+            <div class="empty-state" id="empty-state">There're no lobbies bruh</div>
         </div>
         </nav>
     </main>
