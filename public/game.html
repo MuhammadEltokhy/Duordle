@@ -60,7 +60,520 @@
       <button class="btn btn-secondary" id="home-btn">Back to home</button>
     </div>
   </div>
+<script>
+    // Gameplay page. The server is the referee: it validates words, computes colours,
+// scores and the countdown. This file only draws things and sends guesses.
+(function () {
+  const { socket, ensureRegistered, getLobbyId, getUsername, escapeHtml } = window.Duordle;
+  const lobbyId = getLobbyId();
+  const myName = getUsername();
+  if (!lobbyId || !myName) { window.location.href = '/'; return; }
 
+  const $ = (id) => document.getElementById(id);
+  const boardEl = $('board');
+  const keyboardEl = $('keyboard');
+  const opponentsEl = $('opponents-container');
+  const opponentsPanel = $('opponents-panel');
+  const myClockEl = $('my-clock');
+  const countdownEl = $('countdown');
+  const roundEl = $('hud-round');
+  const resultModal = $('round-result-modal');
+  const finalScreen = $('final-screen');
+  const nextBtn = $('next-round-btn');
+  const finalBtn = $('final-btn');
+  const playAgainBtn = $('play-again-btn');
+
+  // ------------------------------------------------------------------ state
+  let offset = 0;                 // server clock - local clock
+  const serverNow = () => Date.now() + offset;
+  let amHost = false;
+  let round = null;               // { index,total,length,maxTrials,startTime,deadline,limitMs,ended }
+  let rows = [];                  // own board: array of arrays of tile elements
+  let current = '';               // letters typed in the active row
+  let activeRow = 0;
+  let pending = false;            // waiting for the server's answer to a guess
+  let myFinished = false;
+  let myFinishMs = null;
+  let keyColors = {};             // letter -> best colour so far
+  const opp = new Map();          // username -> { el, clockEl, rows, finished, finishMs, count }
+  let finalTimer = null;
+  let nextTimer = null;
+  let lastResult = null;
+
+  const RANK = { gray: 1, yellow: 2, green: 3 };
+  const FLIP_STEP = 250, FLIP_LEN = 600;
+  const flipTotal = (len) => (len - 1) * FLIP_STEP + FLIP_LEN;
+
+  function syncClock(sNow) { if (typeof sNow === 'number') offset = sNow - Date.now(); }
+
+  // ------------------------------------------------------------- own board
+  function buildBoard() {
+    boardEl.innerHTML = '';
+    rows = [];
+    for (let r = 0; r < round.maxTrials; r++) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'board-row';
+      const tiles = [];
+      for (let c = 0; c < round.length; c++) {
+        const t = document.createElement('div');
+        t.className = 'tile';
+        rowEl.appendChild(t);
+        tiles.push(t);
+      }
+      boardEl.appendChild(rowEl);
+      rows.push(tiles);
+    }
+  }
+
+  function buildKeyboard() {
+    keyboardEl.innerHTML = '';
+    const layout = ['qwertyuiop', 'asdfghjkl', '*zxcvbnm<'];
+    for (const line of layout) {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'keyboard-row';
+      for (const ch of line) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'key';
+        if (ch === '*') { b.textContent = 'Enter'; b.dataset.key = 'Enter'; b.classList.add('wide'); }
+        else if (ch === '<') { b.textContent = '⌫'; b.dataset.key = 'Backspace'; b.classList.add('wide'); }
+        else { b.textContent = ch; b.dataset.key = ch; }
+        rowEl.appendChild(b);
+      }
+      keyboardEl.appendChild(rowEl);
+    }
+  }
+
+  function paintKey(letter, color) {
+    const l = letter.toLowerCase();
+    if ((RANK[keyColors[l]] || 0) >= RANK[color]) return;
+    keyColors[l] = color;
+    const key = keyboardEl.querySelector(`[data-key="${l}"]`);
+    if (key) { key.classList.remove('gray', 'yellow'); key.classList.add(color); }
+  }
+
+  function canType() { return round && !round.ended && !myFinished && !pending && activeRow < round.maxTrials; }
+
+  function typeLetter(ch) {
+    if (!canType() || current.length >= round.length) return;
+    const tile = rows[activeRow][current.length];
+    tile.textContent = ch.toUpperCase();
+    tile.classList.add('filled');
+    tile.classList.remove('pop'); void tile.offsetWidth; tile.classList.add('pop');
+    current += ch.toLowerCase();
+  }
+
+  function backspace() {
+    if (!canType() || !current.length) return;
+    current = current.slice(0, -1);
+    const tile = rows[activeRow][current.length];
+    tile.textContent = '';
+    tile.classList.remove('filled', 'pop');
+  }
+
+  function shakeRow() {
+    const rowEl = boardEl.children[activeRow];
+    if (!rowEl) return;
+    rowEl.classList.remove('shake'); void rowEl.offsetWidth; rowEl.classList.add('shake');
+  }
+
+  // Colours a finished row with the flip animation; the keyboard follows when it ends.
+  function revealRow(rowIndex, word, colors, instant) {
+    const tiles = rows[rowIndex];
+    tiles.forEach((t, i) => {
+      t.textContent = word[i].toUpperCase();
+      t.classList.add('filled', colors[i]);
+      if (!instant) t.classList.add('flip', 'd' + i);
+    });
+    const done = () => word.split('').forEach((ch, i) => paintKey(ch, colors[i]));
+    if (instant) done(); else setTimeout(done, flipTotal(tiles.length));
+  }
+
+  function bounceRow(rowIndex) {
+    rows[rowIndex].forEach((t, i) => { t.classList.remove('flip'); t.classList.add('bounce', 'd' + i); });
+  }
+
+  function submit() {
+    if (!canType()) return;
+    if (current.length < round.length) { UI.toast('Not enough letters'); shakeRow(); return; }
+    pending = true;
+    const word = current;
+    const rowIndex = activeRow;
+    socket.emit('submitGuess', { lobbyId, guess: word }, (res) => {
+      pending = false;
+      if (!res || !res.ok) {
+        if (res && res.code === 'NOT_IN_WORD_LIST') UI.toast('Not in word list');
+        else UI.toast((res && res.error) || 'Could not send guess');
+        shakeRow();
+        return; // the letters stay so the player can edit them - no trial was used
+      }
+      revealRow(rowIndex, word, res.colors, false);
+      activeRow = rowIndex + 1;
+      current = '';
+      if (res.solved) {
+        myFinished = true;
+        setTimeout(() => { bounceRow(rowIndex); UI.toast('You got it!', { type: 'good' }); }, flipTotal(round.length));
+      } else if (res.outOfTrials) {
+        myFinished = true;
+        setTimeout(() => UI.toast('Out of tries!'), flipTotal(round.length));
+      }
+    });
+  }
+
+  function handleKey(key) {
+    if (key === 'Enter') submit();
+    else if (key === 'Backspace') backspace();
+    else if (/^[a-zA-Z]$/.test(key)) typeLetter(key);
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return; // Ctrl+A etc. must never type letters
+    if (!resultModal.hidden || !finalScreen.hidden) return;
+    if (e.key === 'Enter' || e.key === 'Backspace' || /^[a-zA-Z]$/.test(e.key)) {
+      e.preventDefault();
+      handleKey(e.key);
+    }
+  });
+  keyboardEl.addEventListener('click', (e) => {
+    const b = e.target.closest('.key');
+    if (b) { b.blur(); handleKey(b.dataset.key); }
+  });
+
+  // ------------------------------------------------------- opponents panel
+  function buildOpponents(names) {
+    opponentsEl.innerHTML = '';
+    opp.clear();
+    for (const name of names) {
+      if (name === myName) continue;
+      const el = document.createElement('div');
+      el.className = 'mini';
+      const title = document.createElement('div');
+      title.className = 'mini-name';
+      title.textContent = name;
+      const clock = document.createElement('span');
+      clock.className = 'mini-clock';
+      clock.textContent = '0:00';
+      title.appendChild(clock);
+      const board = document.createElement('div');
+      board.className = 'mini-board cols-' + round.length;
+      const tiles = [];
+      for (let r = 0; r < round.maxTrials; r++) {
+        const rowTiles = [];
+        for (let c = 0; c < round.length; c++) {
+          const t = document.createElement('div');
+          t.className = 'mini-tile';
+          board.appendChild(t);
+          rowTiles.push(t);
+        }
+        tiles.push(rowTiles);
+      }
+      el.appendChild(title);
+      el.appendChild(board);
+      opponentsEl.appendChild(el);
+      opp.set(name, { el, clockEl: clock, tiles, finished: false, finishMs: null });
+    }
+  }
+
+  function paintOpponentRow(name, rowIndex, colors) {
+    const o = opp.get(name);
+    if (!o || !o.tiles[rowIndex]) return;
+    colors.forEach((c, i) => { o.tiles[rowIndex][i].classList.add(c); });
+  }
+
+  function finishOpponent(name, ms, solved) {
+    const o = opp.get(name);
+    if (!o) return;
+    o.finished = true;
+    o.finishMs = ms;
+    o.clockEl.textContent = UI.formatTime(ms, true);
+    o.el.classList.add(solved ? 'solved' : 'failed');
+  }
+
+  // ----------------------------------------------------------------- clocks
+  setInterval(() => {
+    if (!round) return;
+    const now = serverNow();
+    const elapsed = Math.max(0, now - round.startTime);
+    if (!round.ended) {
+      if (!myFinished) myClockEl.textContent = UI.formatTime(elapsed, true);
+      for (const o of opp.values()) if (!o.finished) o.clockEl.textContent = UI.formatTime(elapsed);
+    }
+    if (!round.deadline) { countdownEl.textContent = 'No limit'; countdownEl.classList.remove('low'); }
+    else if (round.ended) { countdownEl.classList.remove('low'); }
+    else {
+      const left = Math.max(0, round.deadline - now);
+      countdownEl.textContent = UI.formatTime(left + 999); // rounds up like a normal countdown
+      countdownEl.classList.toggle('low', left <= 10000);
+    }
+  }, 100);
+
+  // ------------------------------------------------------------- round setup
+  function setupRound(data, snapshot) {
+    syncClock(data.serverNow);
+    round = {
+      index: data.roundIndex, total: data.totalRounds, length: data.wordLength,
+      maxTrials: data.maxTrials, startTime: data.startTime,
+      deadline: data.deadline || null, limitMs: data.limitMs || 0, ended: Boolean(data.ended),
+    };
+    current = ''; activeRow = 0; pending = false; myFinished = false; myFinishMs = null; keyColors = {};
+    UI.clearNotices();
+    UI.hide(resultModal); UI.hide(finalScreen);
+    clearTimeout(finalTimer); clearInterval(nextTimer);
+    roundEl.textContent = `${round.index + 1} / ${round.total}`;
+    buildBoard();
+    buildKeyboard();
+
+    const names = (data.players || []).map((p) => (typeof p === 'string' ? p : p.username));
+    if (snapshot) snapshot.opponents.forEach((o) => { if (!names.includes(o.username)) names.push(o.username); });
+    buildOpponents(names);
+
+    if (snapshot) {
+      snapshot.myGuesses.forEach((g, i) => { revealRow(i, g.word, g.colors, true); });
+      activeRow = snapshot.myGuesses.length;
+      myFinished = snapshot.myFinished || snapshot.ended || !snapshot.participating;
+      if (snapshot.myFinishTimeMs !== null) {
+        myFinishMs = snapshot.myFinishTimeMs;
+        myClockEl.textContent = UI.formatTime(myFinishMs, true);
+      }
+      snapshot.opponents.forEach((o) => {
+        o.rows.forEach((colors, i) => paintOpponentRow(o.username, i, colors));
+        if (o.finished) finishOpponent(o.username, o.finishTimeMs, o.solved);
+      });
+    }
+  }
+
+  // --------------------------------------------------------- server events
+  socket.on('roundStart', (d) => setupRound(d, null));
+
+  socket.on('opponentGuess', (d) => paintOpponentRow(d.username, d.trialIndex - 1, d.colors));
+
+  socket.on('playerFinished', (d) => {
+    if (!round) return;
+    if (d.username === myName) {
+      myFinished = true;
+      myFinishMs = d.finishTimeMs;
+      myClockEl.textContent = UI.formatTime(d.finishTimeMs, true);
+    } else {
+      finishOpponent(d.username, d.finishTimeMs, d.solved);
+    }
+    if (d.forced) return; // the last player being stopped is explained by the result screen
+    const who = d.username === myName ? 'You' : d.username;
+    UI.notice(d.solved
+      ? { title: `${who} solved it!`, sub: UI.formatTime(d.finishTimeMs, true), type: 'good', duration: 2000 }
+      : { title: `${who} used all trials`, sub: UI.formatTime(d.finishTimeMs, true), type: 'warn', duration: 2000 });
+  });
+
+  socket.on('timerUpdate', (d) => {
+    if (!round) return;
+    syncClock(d.serverNow);
+    round.deadline = d.deadline || null;
+    if (d.reduced && d.remainingMs) {
+      countdownEl.classList.remove('bump'); void countdownEl.offsetWidth; countdownEl.classList.add('bump');
+      UI.notice({ title: 'Time reduced!', sub: `New countdown: ${UI.formatTime(d.remainingMs)}`, type: 'bad', duration: 2200 });
+    }
+  });
+
+  socket.on('roundEnding', (d) => {
+    if (!round) return;
+    round.ended = true;
+    if (d && d.reason === 'timeout') UI.toast("Time's up!", { type: 'bad' });
+  });
+
+  socket.on('playerLeft', (d) => {
+    if (!d) return;
+    UI.sideNotice(`Player ${d.username} has left the lobby`);
+    const o = opp.get(d.username);
+    if (o) o.el.classList.add('left');
+  });
+
+  socket.on('hostChanged', (d) => {
+    if (d && d.username === myName) { amHost = true; UI.sideNotice('You are now the host'); refreshButtons(); }
+    else if (d) UI.sideNotice(`${d.username} is now the host`);
+  });
+
+  socket.on('lobbyUpdate', (state) => {
+    const me = state.players.find((p) => p.username === myName);
+    amHost = Boolean(me && me.isHost);
+    refreshButtons();
+    if (state.state === 'lobby') window.location.href = '/lobby.html';
+  });
+
+  socket.on('roundResult', (r) => {
+    // Give the last flip a moment to finish before the word is revealed.
+    setTimeout(() => showResult(r, false), 900);
+  });
+
+  // --------------------------------------------------------------- results
+  function refreshButtons() {
+    if (lastResult && !lastResult.isLastRound) nextBtn.hidden = !amHost;
+    playAgainBtn.hidden = !amHost;
+  }
+
+  function subText(r) {
+    if (!r.solved) return 'Did not solve';
+    return `Solved in ${r.trialsUsed} · ${UI.formatTime(r.timeMs, true)}`;
+  }
+
+  // Builds the ranking list. `startRanks` true = rows start at last round's places.
+  function buildRankList(ul, ranking, startAtPrev, big) {
+    ul.innerHTML = '';
+    ul.className = 'rank-list' + (big ? ' big' : '') + ' n-' + ranking.length;
+    const items = ranking.map((r) => {
+      const li = document.createElement('li');
+      li.className = 'rank-row' + (r.username === myName ? ' me' : '');
+      const place = startAtPrev ? r.prevRank : r.rank;
+      li.classList.add('pos-' + (place - 1));
+      li.innerHTML =
+        `<span class="rank-num">${place}</span>` +
+        `<span class="rank-who"><span class="rank-name">${escapeHtml(r.username)}</span><span class="rank-sub">${escapeHtml(subText(r))}</span></span>` +
+        `<span class="rank-points"><span class="rank-score">0</span><span class="rank-chip">+${r.roundScore}</span></span>` +
+        `<span class="rank-delta"></span>`;
+      ul.appendChild(li);
+      return { r, li, score: li.querySelector('.rank-score'), chip: li.querySelector('.rank-chip'),
+        num: li.querySelector('.rank-num'), delta: li.querySelector('.rank-delta') };
+    });
+    return items;
+  }
+
+  function showResult(r, restored) {
+    lastResult = r;
+    syncClock(r.serverNow);
+    round && (round.ended = true);
+    UI.clearNotices();
+    $('result-heading').textContent = r.isLastRound ? `Round ${r.roundIndex + 1} of ${r.totalRounds} - last round!` : `Round ${r.roundIndex + 1} of ${r.totalRounds}`;
+    $('result-word').textContent = r.word.toUpperCase();
+    nextBtn.hidden = true; finalBtn.hidden = true;
+    const note = $('next-round-note');
+    note.textContent = '';
+    clearInterval(nextTimer); clearTimeout(finalTimer);
+    UI.show(resultModal);
+
+    const items = buildRankList($('ranking-list'), r.ranking, !restored, false);
+
+    const settle = () => {
+      items.forEach((it) => {
+        it.li.classList.remove('pos-' + (it.r.prevRank - 1));
+        it.li.classList.add('pos-' + (it.r.rank - 1));
+        it.num.textContent = it.r.rank;
+        const diff = it.r.prevRank - it.r.rank;
+        if (diff > 0) { it.delta.className = 'rank-delta up'; it.delta.textContent = '▲' + diff; it.li.classList.add('rose'); }
+        else if (diff < 0) { it.delta.className = 'rank-delta down'; it.delta.textContent = '▼' + (-diff); it.li.classList.add('fell'); }
+        else { it.delta.className = 'rank-delta same'; it.delta.textContent = '='; }
+      });
+    };
+
+    const afterAnimation = () => {
+      if (r.isLastRound) {
+        finalBtn.hidden = false;
+        finalTimer = setTimeout(() => showFinal(r), 6000);
+      } else {
+        refreshButtons();
+        startNextCountdown(restored ? null : r.nextRoundInMs, note);
+      }
+    };
+
+    if (restored) {
+      items.forEach((it) => { it.score.textContent = it.r.totalScore.toLocaleString('en-US'); it.chip.classList.add('show'); });
+      settle();
+      afterAnimation();
+      return;
+    }
+
+    items.forEach((it) => { it.score.textContent = it.r.prevTotal.toLocaleString('en-US'); });
+    setTimeout(() => {
+      items.forEach((it) => {
+        it.chip.classList.add('show');
+        UI.countUp(it.score, it.r.prevTotal, it.r.totalScore, 1600);
+      });
+    }, 500);
+    setTimeout(settle, 2300);
+    setTimeout(afterAnimation, 3300);
+  }
+
+  function startNextCountdown(ms, note) {
+    if (ms === null) { note.textContent = 'The next round starts soon...'; return; }
+    const end = Date.now() + Math.max(0, ms - 3300); // part of it was spent on the animation
+    const tick = () => {
+      const s = Math.max(0, Math.ceil((end - Date.now()) / 1000));
+      note.textContent = `Next round in ${s}s`;
+      if (s <= 0) clearInterval(nextTimer);
+    };
+    tick();
+    nextTimer = setInterval(tick, 250);
+  }
+
+  nextBtn.addEventListener('click', () => {
+    nextBtn.disabled = true;
+    socket.emit('nextRound', { lobbyId }, () => { nextBtn.disabled = false; });
+  });
+  finalBtn.addEventListener('click', () => showFinal(lastResult));
+
+  // ------------------------------------------------------------ final screen
+  function showFinal(r) {
+    if (!r || !finalScreen.hidden) return;
+    clearTimeout(finalTimer);
+    UI.hide(resultModal);
+    UI.show(finalScreen);
+    refreshButtons();
+    const items = buildRankList($('final-list'), r.ranking, false, true);
+    items.forEach((it, i) => {
+      it.chip.remove();
+      it.delta.remove();
+      it.num.textContent = it.r.rank;
+      if (it.r.rank === 1) it.li.querySelector('.rank-name').insertAdjacentHTML('afterbegin', '<span class="crown">👑</span> ');
+      setTimeout(() => UI.countUp(it.score, 0, it.r.totalScore, 2200), 300 + i * 150);
+    });
+    const winners = r.winners && r.winners.length ? r.winners : [{ username: r.ranking[0].username, totalScore: r.ranking[0].totalScore }];
+    setTimeout(() => {
+      const names = winners.map((w) => w.username);
+      const pts = winners[0].totalScore.toLocaleString('en-US');
+      const title = names.length === 1
+        ? `${names[0]} won with ${pts} points`
+        : `${names.join(' and ')} won with ${pts} points each`;
+      UI.notice({ title, type: 'good', duration: 4500 });
+    }, 2800);
+  }
+
+  playAgainBtn.addEventListener('click', () => {
+    playAgainBtn.disabled = true;
+    socket.emit('playAgain', { lobbyId }, (res) => {
+      playAgainBtn.disabled = false;
+      if (!res || !res.ok) UI.toast((res && res.error) || 'Could not restart');
+    });
+  });
+  $('home-btn').addEventListener('click', () => {
+    socket.emit('leaveLobby', { lobbyId }, () => {
+      sessionStorage.removeItem('duordle_lobby_id');
+      window.location.href = '/';
+    });
+  });
+
+  $('opponents-toggle-btn').addEventListener('click', () => opponentsPanel.classList.toggle('open'));
+  opponentsPanel.addEventListener('click', (e) => { if (e.target === opponentsPanel) opponentsPanel.classList.remove('open'); });
+
+  // ------------------------------------------------------------------ start
+  ensureRegistered(() => {
+    socket.emit('rejoinLobby', { lobbyId }, (res) => {
+      if (!res || !res.ok) { window.location.href = '/'; return; }
+      syncClock(res.serverNow);
+      const me = res.state.players.find((p) => p.username === myName);
+      amHost = Boolean(me && me.isHost);
+      if (res.state.state === 'lobby') { window.location.href = '/lobby.html'; return; }
+      if (res.round) {
+        setupRound({
+          roundIndex: res.round.roundIndex, totalRounds: res.round.totalRounds,
+          wordLength: res.round.wordLength, maxTrials: res.round.maxTrials,
+          startTime: res.round.startTime, serverNow: res.round.serverNow,
+          limitMs: res.round.limitMs, deadline: res.round.deadline, ended: res.round.ended,
+          players: res.state.players,
+        }, res.round);
+      }
+      if (res.result) showResult(res.result, true);
+    });
+  });
+})();
+
+</script>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/scripts/socket-client.js"></script>
   <script src="/scripts/ui.js"></script>
