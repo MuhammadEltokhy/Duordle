@@ -5,17 +5,25 @@ const cfg = require('../config');
 const USED_IDS_FILE = path.join(__dirname, '..', 'data', 'used_ids.json');
 
 function loadUsedIds() {
-  if (!fs.existsSync(USED_IDS_FILE)) {
-    fs.writeFileSync(USED_IDS_FILE, '[]');
+  try {
+    if (!fs.existsSync(USED_IDS_FILE)) {
+      fs.writeFileSync(USED_IDS_FILE, '[]');
+      return new Set();
+    }
+    return new Set(JSON.parse(fs.readFileSync(USED_IDS_FILE, 'utf8')));
+  } catch (err) {
+    console.warn(`[lobbies] could not read the used-ID ledger: ${err.message}`);
     return new Set();
   }
-  const list = JSON.parse(fs.readFileSync(USED_IDS_FILE, 'utf8'));
-  return new Set(list);
 }
 
-function persistUsedId(id) {
-  const list = Array.from(usedIds);
-  fs.writeFileSync(USED_IDS_FILE, JSON.stringify(list));
+function persistUsedId() {
+  try {
+    fs.writeFileSync(USED_IDS_FILE, JSON.stringify(Array.from(usedIds)));
+  } catch (err) {
+    // Read-only disk (some hosts): IDs are still never reused while the server runs.
+    console.warn(`[lobbies] could not save the used-ID ledger: ${err.message}`);
+  }
 }
 
 // Every ID ever generated lives here forever, even after its lobby is
@@ -34,7 +42,7 @@ function generateLobbyId() {
   } while (usedIds.has(id));
 
   usedIds.add(id);
-  persistUsedId(id);
+  persistUsedId();
   return id;
 }
 
@@ -51,6 +59,8 @@ function getLobby(id) {
   return lobbies.get(id);
 }
 
+// Closing a lobby removes it from memory only. Its ID stays in the used-ID ledger
+// above FOREVER, so that ID can never be issued to another lobby.
 function deleteLobby(id) {
   lobbies.delete(id);
 }

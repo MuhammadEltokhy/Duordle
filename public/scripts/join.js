@@ -15,15 +15,9 @@
   const submitIdBtn = document.getElementById('submit-id-btn');
   const cancelIdBtn = document.getElementById('cancel-id-btn');
 
-  const toast = document.getElementById('toast');
-
+  // Messages drop in from the top and disappear after 3 seconds (see ui.js / main.css).
   function showToast(message) {
-    toast.textContent = message;
-    toast.style.display = 'block';
-    toast.classList.remove('shake');
-    void toast.offsetWidth; // restart animation
-    toast.classList.add('shake');
-    setTimeout(() => { toast.style.display = 'none'; }, 3000);
+    UI.toast(message, { duration: 3000 });
   }
 
   function currentFilters() {
@@ -36,10 +30,10 @@
   function renderLobbies(lobbies) {
     lobbyListEl.innerHTML = '';
     if (!lobbies || lobbies.length === 0) {
-      emptyStateEl.style.display = 'block';
+      emptyStateEl.hidden = false;
       return;
     }
-    emptyStateEl.style.display = 'none';
+    emptyStateEl.hidden = true;
     for (const lobby of lobbies) {
       const li = document.createElement('li');
       li.className = 'lobby-row';
@@ -76,16 +70,23 @@
   }
 
   filtersBtn.addEventListener('click', () => {
-    filtersBox.style.display = filtersBox.style.display === 'none' ? 'block' : 'none';
+    // Starts hidden (HTML `hidden` attribute); opens/closes with a short animation.
+    if (filtersBox.hidden) UI.show(filtersBox);
+    else UI.hide(filtersBox);
   });
   applyFiltersBtn.addEventListener('click', refreshList);
 
   useIdBtn.addEventListener('click', () => {
     lobbyIdInput.value = '';
-    useIdModal.style.display = 'flex';
+    UI.show(useIdModal);
     lobbyIdInput.focus();
   });
-  cancelIdBtn.addEventListener('click', () => { useIdModal.style.display = 'none'; });
+  cancelIdBtn.addEventListener('click', () => UI.hide(useIdModal));
+  // Enter submits, Escape closes
+  lobbyIdInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitIdBtn.click();
+    if (e.key === 'Escape') UI.hide(useIdModal);
+  });
 
   submitIdBtn.addEventListener('click', () => {
     const id = lobbyIdInput.value.trim();

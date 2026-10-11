@@ -1,50 +1,69 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Gameplay match for duordle">
-    <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="styles/style.css">
-    <link rel="stylesheet" href="styles/game.css">
-    <title>Gameplay</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Gameplay match for Duordle">
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/styles/main.css">
+  <link rel="stylesheet" href="/styles/game.css">
+  <title>Gameplay — Duordle</title>
 </head>
 <body>
-    <header class="site-header">
-        <div class="logo-mark" aria-hidden="true">
-            <span></span><span></span><span></span>
-            <span></span><span class="filled-yellow"></span><span></span>
-            <span></span><span class="filled-green"></span><span></span>
-        </div>
-        <span class="site-title">Duordle</span>
-        <button class="btn btn-secondary opponents-toggle" id="opponents-toggle-btn" type="button">Players</button>
-    </header>
-    <main>
-        <div class="game-layout">
-            <aside class="opponents-panel" id="opponents-panel">
-                <h2>Lobby</h2>
-                <div id="opponents-container"></div>
-            </aside>
-            <section class="own-game">
-                <div class="round-info" id="round-info"></div>
-                <div class="board" id="board"></div>
-                <div class="keyboard" id="keyboard"></div>
-            </section>
-        </div>
-    </main>
-    <div class="modal-overlay" id="round-result-modal">
-        <div class="modal-box">
-            <h2 id="result-heading">Round over</h2>
-            <p class="word-reveal">The word was <strong id="result-word"></strong></p>
-            <ul class="ranking-list" id="ranking-list"></ul>
-            <button class="btn" id="next-round-btn">Next round</button>
-            <button class="btn" id="play-again-btn">Play again</button>
-            <a href="/" class="hint-text">Back to home</a>
-        </div>
+  <header class="site-header">
+    <div class="logo-mark" aria-hidden="true">
+      <span></span><span></span><span></span>
+      <span></span><span class="filled-yellow"></span><span></span>
+      <span></span><span class="filled-green"></span><span></span>
     </div>
-    <div class="toast" id="toast"></div>
+    <span class="site-title">Duordle</span>
+    <button class="btn btn-secondary opponents-toggle" id="opponents-toggle-btn" type="button">Players</button>
+  </header>
+
+  <main>
+    <div class="game-layout">
+      <section class="own-game">
+        <div class="hud">
+          <div class="hud-cell"><span class="hud-label">Round</span><span class="hud-value" id="hud-round">-</span></div>
+          <div class="hud-cell"><span class="hud-label">Your time</span><span class="hud-value" id="my-clock">0:00.0</span></div>
+          <div class="hud-cell"><span class="hud-label">Time left</span><span class="hud-value" id="countdown">-</span></div>
+        </div>
+        <div class="board" id="board"></div>
+        <div class="keyboard" id="keyboard"></div>
+      </section>
+
+      <aside class="opponents-panel" id="opponents-panel">
+        <h2>Players</h2>
+        <div class="opponents-grid" id="opponents-container"></div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Round result -->
+  <div class="modal-overlay" id="round-result-modal" hidden>
+    <div class="modal-box result-box">
+      <h2 id="result-heading">Round over</h2>
+      <p class="word-reveal selectable">The word was <strong id="result-word"></strong></p>
+      <ol class="rank-list" id="ranking-list"></ol>
+      <p class="hint-text" id="next-round-note"></p>
+      <button class="btn" id="next-round-btn" hidden>Next round now</button>
+      <button class="btn" id="final-btn" hidden>See final results</button>
+    </div>
+  </div>
+
+  <!-- Final results (big screen) -->
+  <div class="final-screen" id="final-screen" hidden>
+    <div class="final-inner">
+      <h1>Final results</h1>
+      <ol class="rank-list big" id="final-list"></ol>
+      <button class="btn" id="play-again-btn" hidden>Play again</button>
+      <button class="btn btn-secondary" id="home-btn">Back to home</button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/scripts/socket-client.js"></script>
+  <script src="/scripts/ui.js"></script>
+  <script src="/scripts/game.js"></script>
 </body>
-<script src="/socket.io/socket.io.js"></script>
-<script src="/scripts/socket-client.js"></script>
-<script src="/scripts/game.js"></script>
 </html>

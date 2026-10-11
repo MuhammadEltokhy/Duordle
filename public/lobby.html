@@ -6,7 +6,7 @@
   <title>Lobby</title>
   <meta name="description" content="Waiting room"/>
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml"/>
-  <link rel="stylesheet" href="styles/style.css"/>
+  <link rel="stylesheet" href="styles/main.css"/>
   <link rel="stylesheet" href="styles/lobby.css">
 </head>
 <body>
@@ -22,13 +22,15 @@
     <div class="page-container">
       <h1>Lobby <span class="id-display" id="lobby-id-display"></span></h1>
       <p class="hint-text" id="visibility-note"></p>
-      <p class="subtitle" id="share-note"></p>
-      <p class="hint-text"><strong>Word length:</strong><span id="setting-length"></span> &middot;
-        <strong>Rounds:</strong><span id="setting-rounds"></span> &middot;
-        <strong>Max players:</strong><span id="setting-maxplayers"></span></p>
+      <p class="subtitle">Lobby ID: <span class="lobby-id" id="share-note"></span></p>
+      <p class="hint-text"><strong>Word length:</strong> <span id="setting-length"></span> &middot;
+        <strong>Rounds:</strong> <span id="setting-rounds"></span> &middot;
+        <strong>Max players:</strong> <span id="setting-maxplayers"></span> &middot;
+        <strong>Round time:</strong> <span id="setting-time"></span></p>
       <ul class="lobby-list" id="player-list"></ul>
-      <button class="btn" id="start-btn">Start game</button>
-      <p class="hint-text" id="waiting-note">Waiting for the host to start...</p>
+      <button class="btn" id="start-btn" hidden>Start game</button>
+      <p class="hint-text" id="waiting-note" hidden>Waiting for the host to start...</p>
+      <button class="btn btn-secondary" id="leave-btn">Leave lobby</button>
     </div>
   </main>
   <footer class="site-footer">
@@ -36,6 +38,7 @@
   </footer>
   <script src="socket.io/socket.io.js"></script>
   <script src="/scripts/socket-client.js"></script>
+  <script src="/scripts/ui.js"></script>
   <script src="/scripts/room.js"></script>
 </body>
 </html>

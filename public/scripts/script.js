@@ -18,7 +18,10 @@
   unInput.addEventListener('input', refresh);
   refresh();
   function save(go) {
-    sessionStorage.setItem('username', unInput.value.trim());
+    // Must be the SAME key socket-client.js reads ('duordle_username'),
+    // otherwise the next page thinks nobody is logged in and bounces
+    // the player straight back to the home page.
+    sessionStorage.setItem('duordle_username', unInput.value.trim());
     window.location.href = go;
   }
   create.addEventListener('click', () => save('create.html'));

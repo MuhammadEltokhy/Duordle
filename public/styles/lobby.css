@@ -1,15 +1,18 @@
-.page-container h1{
-    font-size: 1.8rem;
+/* lobby.html only (loaded after main.css) */
+.page-container h1 { font-size: 1.8rem; }
+.page-container .id-display { font-family: monospace; }
+.page-container .subtitle { font-size: 0.95rem; }
+.lobby-id { font-family: monospace; font-weight: 700; letter-spacing: 0.15em; }
+.page-container ul { margin-top: 20px; }
+.page-container .btn { margin-top: 14px; }
+.badge {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 1px 6px;
+  margin-left: 6px;
+  border-radius: 3px;
+  background: var(--color-border);
+  vertical-align: middle;
 }
-.page-container .id-display{
-    font-family: monospace;
-}
-.page-container .subtitle{
-    font-size: 0.95rem;
-}
-.page-container ul{
-    margin-top: 20px;
-}
-.page-container button{
-    display: none;
-}
+.badge.host { background: #6aaa64; color: #fff; }
+.badge.away { background: #c9b458; color: #fff; }

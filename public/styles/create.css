@@ -1,0 +1,27 @@
+/* create.html only (loaded after main.css) */
+
+.page-container h1 {
+  font-size: 1.8rem;
+}
+
+/* create.js adds .is-max when the slider hits 10 letters */
+.hint-text.is-max {
+  color: var(--color-danger);
+  font-weight: 700;
+}
+
+/* Round-time controls */
+.check-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  font-weight: 400;
+  cursor: pointer;
+}
+.check-row input {
+  width: auto;
+}
+#time-slider:disabled {
+  opacity: 0.4;
+}

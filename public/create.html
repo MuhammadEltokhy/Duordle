@@ -3,10 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Create a Lobby</title>
+  <title>Create a Lobby — Duordle</title>
   <meta name="description" content="Set up your Duordle lobby: word length, player count, rounds, and whether it's public or private." />
-  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
-  <link rel="stylesheet" href="styles/style.css"/>
+  <link rel="canonical" href="https://your-domain-here.example/create-lobby.html" />
+  <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml" />
+  <link rel="stylesheet" href="/styles/main.css" />
+  <link rel="stylesheet" href="/styles/create.css" />
 </head>
 <body>
   <header class="site-header">
@@ -17,22 +19,26 @@
     </div>
     <span class="site-title">Duordle</span>
   </header>
+
   <main>
     <nav class="breadcrumbs"><a href="/">Home</a> / Create a lobby</nav>
     <div class="page-container">
-      <h1 style="font-size:1.8rem;">Create your lobby</h1>
+      <h1>Create your lobby</h1>
+
       <div class="field">
         <label for="visibility-select">Lobby visibility</label>
         <select id="visibility-select">
-          <option value="public">Public</option>
-          <option value="private">Private</option>
+          <option value="public">Public — listed for anyone to join</option>
+          <option value="private">Private — joinable only with your lobby ID</option>
         </select>
       </div>
+
       <div class="field">
         <label for="length-slider">Word length: <span id="length-value">5</span></label>
         <input type="range" id="length-slider" min="3" max="10" step="1" value="5" />
         <div class="hint-text" id="length-joke">that's real deal homie</div>
       </div>
+
       <div class="field">
         <label for="players-select">Maximum players</label>
         <select id="players-select">
@@ -43,6 +49,7 @@
           <option value="6">6</option>
         </select>
       </div>
+
       <div class="field">
         <label for="rounds-select">Number of rounds</label>
         <select id="rounds-select">
@@ -55,15 +62,30 @@
           <option value="7">7</option>
         </select>
       </div>
+
+      <div class="field">
+        <label for="time-slider">Max time per round: <span id="time-value">3:00</span></label>
+        <input type="range" id="time-slider" min="60" max="300" step="15" value="180" />
+        <label class="check-row" for="no-time-check">
+          <input type="checkbox" id="no-time-check" />
+          <span>No time limit (disable the countdown)</span>
+        </label>
+        <div class="hint-text" id="time-note">When players finish, the remaining time shrinks (last two players get at most 1:00).</div>
+      </div>
+
       <button class="btn" id="create-submit-btn">Create lobby</button>
       <div class="error-text" id="create-error"></div>
     </div>
   </main>
+
   <footer class="site-footer">
     <span>Duordle</span>
+    <a href="/privacy-policy.html">Privacy Policy</a>
   </footer>
+
   <script src="/socket.io/socket.io.js"></script>
   <script src="/scripts/socket-client.js"></script>
+  <script src="/scripts/ui.js"></script>
   <script src="/scripts/create.js"></script>
 </body>
 </html>
