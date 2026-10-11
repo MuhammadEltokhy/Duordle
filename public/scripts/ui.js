@@ -3,9 +3,6 @@
 // Needs no socket - it is loaded by every page that shows messages or pop-ups.
 // All styling lives in main.css (no inline styles are written from here).
 window.UI = (function () {
-  const reduceMotion = () =>
-    window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
   function layer(id, className) {
     let el = document.getElementById(id);
     if (!el) {
@@ -143,7 +140,7 @@ window.UI = (function () {
   // Counts a number from `from` to `to`: very fast at first, then slowing down
   // (exponential ease-out) until it lands exactly on `to`.
   function countUp(el, from, to, durationMs, done) {
-    if (reduceMotion() || from === to) {
+    if (from === to) {
       el.textContent = Number(to).toLocaleString('en-US');
       if (done) done();
       return;
@@ -167,5 +164,5 @@ window.UI = (function () {
     requestAnimationFrame(() => requestAnimationFrame(fn));
   }
 
-  return { toast, notice, clearNotices, sideNotice, show, hide, formatTime, countUp, nextFrame, reduceMotion };
+  return { toast, notice, clearNotices, sideNotice, show, hide, formatTime, countUp, nextFrame };
 })();

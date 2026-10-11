@@ -76,10 +76,10 @@
 .tile.flip.d6 { animation-delay: 1.5s; }  .tile.flip.d7 { animation-delay: 1.75s; }
 .tile.flip.d8 { animation-delay: 2s; }    .tile.flip.d9 { animation-delay: 2.25s; }
 @keyframes tile-flip {
-  0%   { transform: rotateX(0);      background: #fff; border-color: var(--color-border-strong); color: var(--color-text); }
-  49%  { transform: rotateX(-90deg); background: #fff; border-color: var(--color-border-strong); color: var(--color-text); }
-  50%  { transform: rotateX(-90deg); background: var(--reveal); border-color: var(--reveal); color: #fff; }
-  100% { transform: rotateX(0);      background: var(--reveal); border-color: var(--reveal); color: #fff; }
+  0%   { transform: perspective(400px) rotateX(0);      background: #fff; border-color: var(--color-border-strong); color: var(--color-text); }
+  49%  { transform: perspective(400px) rotateX(-90deg); background: #fff; border-color: var(--color-border-strong); color: var(--color-text); }
+  50%  { transform: perspective(400px) rotateX(-90deg); background: var(--reveal); border-color: var(--reveal); color: #fff; }
+  100% { transform: perspective(400px) rotateX(0); background: var(--reveal); border-color: var(--reveal); color: #fff; }
 }
 
 /* win: tiles hop one after another */

@@ -403,11 +403,11 @@ footer.site-footer, footer.site-footer *,
   to   { opacity: 1; transform: none; }
 }
 
-/* People who prefer less motion get (almost) no animation */
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    transition-duration: 0.01ms !important;
-  }
+
+/* Shown by socket-client.js when the Node server cannot be reached (e.g. a static host) */
+.offline-banner {
+  position: fixed; left: 0; right: 0; top: 0; z-index: 2000;
+  background: var(--color-danger); color: #fff; text-align: center;
+  padding: 10px 16px; font-weight: 700; font-size: 0.9rem;
+  animation: notice-in 0.4s ease both;
 }
